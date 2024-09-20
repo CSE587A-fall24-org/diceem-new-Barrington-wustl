@@ -147,7 +147,9 @@ def e_step(experiment_data: List[NDArray[np.int_]],
 
     # PUT YOUR CODE HERE, FOLLOWING THE DIRECTIONS ABOVE
     for roll in experiment_data:
-        posteriors = dice_posterior(roll, bag_of_dice)
+        posteriors = dice_posterior(sample_draw: List[int], 
+                   die_type_counts: Tuple[int],
+                   dice: Tuple[Die]) -> float:
         for die_idx, posterior in enumerate(posteriors):
             expected_counts[die_idx][:len(roll)] += posterior * roll
 
