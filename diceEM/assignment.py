@@ -74,6 +74,39 @@ def diceEM(experiment_data: List[NDArray[np.int_]],  # pylint: disable=C0103
 
     return iterations, bag_of_dice
 
+def dice_posterior(sample_draw: List[int], 
+                   die_type_counts: Tuple[int],
+                   dice: Tuple[Die]) -> float:
+    """Calculates the posterior probability of a type 1 vs a type 2 die,
+    based on the number of times each face appears in the draw, and the
+    relative numbers of type 1 and type 2 dice in the bag, as well as the
+    face probabilities for type 1 and type 2 dice. The single number returned
+    is the posterior probability of the Type 1 die. Note: we expect a BagOfDice
+    object with only two dice.
+
+    """
+    # Requiring only two dice with the same number of faces simplifies the
+    # problem a bit.
+    if len(dice) != 2:
+        raise ValueError('This code requires exactly 2 dice')
+    if dice[0].num_faces != dice[1].num_faces:
+        raise ValueError('This code requires two dice with the same number of faces')
+    if len(sample_draw) != dice[0].num_faces:
+        raise ValueError('The sample draw is a list of observed counts for the \
+                         faces. Its length must be equal to the number of faces \
+                         on the dice.')
+    # YOUR CODE HERE. You may want to use your safe_exponeniate.
+    prior_die_1 = die_type_counts[0] / sum(die_type_counts)
+    prior_die_2 = die_type_counts[1] / sum(die_type_counts)
+
+    likelihood_die_1 = np.prod([safe_exponentiate(dice[0].face_probs[i], sample_draw[i]) 
+                                for i in range(dice[0].num_faces)])
+    likelihood_die_2 = np.prod([safe_exponentiate(dice[1].face_probs[i], sample_draw[i]) 
+                                for i in range(dice[1].num_faces)])
+    
+    return (likelihood_die_1 * prior_die_1)/((likelihood_die_1 * prior_die_1) 
+                                             + (likelihood_die_2 * prior_die_2))
+
 def e_step(experiment_data: List[NDArray[np.int_]],
            bag_of_dice: BagOfDice) -> NDArray:
     """Performs the Expectation Step of the EM algorithm for the dice problem.
