@@ -152,12 +152,10 @@ def e_step(experiment_data: List[NDArray[np.int_]],
 
         I_func = []
         for x in draw:
-            # I_func.append(x/sum(draw))
             I_func.append(x)
 
         I_func_2 = []
         for x_2 in draw:
-            # I_func_2.append(x_2/sum(draw))
             I_func_2.append(x_2)
 
         type_1_counts.append(list(map(lambda x: x*posterior_1,I_func)))
@@ -167,8 +165,6 @@ def e_step(experiment_data: List[NDArray[np.int_]],
         for idx_2, counts_2 in enumerate(counts):
             expected_counts[0,idx_2] = expected_counts[0,idx_2] + type_1_counts[idx][idx_2]
             expected_counts[1,idx_2] = expected_counts[1,idx_2] + type_2_counts[idx][idx_2]
-
-    return expected_counts
 
     return expected_counts
 
