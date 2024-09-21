@@ -146,12 +146,10 @@ def e_step(experiment_data: List[NDArray[np.int_]],
     # counts for each type over all the draws.  
 
     # PUT YOUR CODE HERE, FOLLOWING THE DIRECTIONS ABOVE
-    for roll in experiment_data:
-        posteriors = dice_posterior(sample_draw: List[int], 
-                   die_type_counts: Tuple[int],
-                   dice: Tuple[Die]) -> float:
-        for die_idx, posterior in enumerate(posteriors):
-            expected_counts[die_idx][:len(roll)] += posterior * roll
+    for draw_index, draw in enumerate(experiment_data):
+        for die_index, die in enumerate(bag_of_dice.dice):
+            posterior = dice_posterior(draw, bag_of_dice.die_type_counts, (die, ))
+            expected_counts[die_index] += posterior * draw  # Put your code here.
 
     return expected_counts
 
