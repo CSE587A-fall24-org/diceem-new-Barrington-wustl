@@ -58,21 +58,18 @@ def diceEM(experiment_data: List[NDArray[np.int_]],  # pylint: disable=C0103
         # this is just for visualizing the progress of the algorithm
         logging.debug("Likelihood: %s",
                       bag_of_dice.likelihood(experiment_data))
-        
-
 
         # YOUR CODE HERE. SET REQUIRED VARIABLES BY CALLING e-step AND m-step.
-       
-        # E-step: compute the expected counts given current parameters
-        expected_counts_by_die = e_step(experiment_data, bag_of_dice) 
-        
+        # E-step: compute the expected counts given current parameters        
         # M-step: update the parameters given the expected counts
-        updated_bag_of_dice = m_step(expected_counts_by_die)
+        expected_counts = e_step(experiment_data, bag_of_dice)
+        updated_bag_of_dice = m_step(expected_counts)
       
         prev_bag_of_dice: BagOfDice = bag_of_dice
         bag_of_dice = updated_bag_of_dice
 
     return iterations, bag_of_dice
+
 
 def dice_posterior(sample_draw: List[int], 
                    die_type_counts: Tuple[int],
@@ -106,6 +103,7 @@ def dice_posterior(sample_draw: List[int],
     
     return (likelihood_die_1 * prior_die_1)/((likelihood_die_1 * prior_die_1) 
                                              + (likelihood_die_2 * prior_die_2))
+
 
 def e_step(experiment_data: List[NDArray[np.int_]],
            bag_of_dice: BagOfDice) -> NDArray:
@@ -146,10 +144,31 @@ def e_step(experiment_data: List[NDArray[np.int_]],
     # counts for each type over all the draws.  
 
     # PUT YOUR CODE HERE, FOLLOWING THE DIRECTIONS ABOVE
-    for draw_index, draw in enumerate(experiment_data):
-        for die_index, die in enumerate(bag_of_dice.dice):
-            posterior = dice_posterior(draw, bag_of_dice.die_type_counts, (die, ))
-            expected_counts[die_index] += posterior * draw  # Put your code here.
+    type_1_counts: list = []
+    type_2_counts: list = []
+    for draw in experiment_data:
+        posterior_1 = dice_posterior(draw,bag_of_dice)
+        posterior_2 = 1 - posterior_1
+
+        I_func = []
+        for x in draw:
+            # I_func.append(x/sum(draw))
+            I_func.append(x)
+
+        I_func_2 = []
+        for x_2 in draw:
+            # I_func_2.append(x_2/sum(draw))
+            I_func_2.append(x_2)
+
+        type_1_counts.append(list(map(lambda x: x*posterior_1,I_func)))
+        type_2_counts.append(list(map(lambda x: x*posterior_2,I_func_2)))
+
+    for idx, counts in enumerate(type_1_counts):
+        for idx_2, counts_2 in enumerate(counts):
+            expected_counts[0,idx_2] = expected_counts[0,idx_2] + type_1_counts[idx][idx_2]
+            expected_counts[1,idx_2] = expected_counts[1,idx_2] + type_2_counts[idx][idx_2]
+
+    return expected_counts
 
     return expected_counts
 
@@ -177,12 +196,9 @@ def m_step(expected_counts_by_die: NDArray[np.float_]):
     updated_type_2_frequency = np.sum(expected_counts_by_die[1])
 
     # REPLACE EACH NONE BELOW WITH YOUR CODE. 
-    updated_priors = np.array([updated_type_1_frequency, updated_type_2_frequency]) / \
-                     (updated_type_1_frequency + updated_type_2_frequency)
-    
-    updated_type_1_face_probs = expected_counts_by_die[0] / updated_type_1_frequency
-
-    updated_type_2_face_probs = expected_counts_by_die[1] / updated_type_2_frequency
+    updated_priors = np.sum(expected_counts_by_die, axis=1) / np.sum(expected_counts_by_die)
+    updated_type_1_face_probs = expected_counts_by_die[0] / np.sum(expected_counts_by_die[0])
+    updated_type_2_face_probs = expected_counts_by_die[1] / np.sum(expected_counts_by_die[1])
     
     updated_bag_of_dice = BagOfDice(updated_priors,
                                     [Die(updated_type_1_face_probs),
